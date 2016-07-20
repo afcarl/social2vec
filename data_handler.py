@@ -23,8 +23,6 @@ class data_handler():
         f1 = open(self.rating_path)
         f2 = open(self.trust_path)
         f3 = open(self.time_path)
-        f_uu = open('train_uu.txt', 'w')
-        f_ui = open('train_ui.txt', 'w')
 
         P_initial = loadmat(f1) #user-rating matrix
         G_raw = loadmat(f2) #trust-trust matrices
@@ -46,9 +44,9 @@ class data_handler():
         #data_UI[:, 2] = R
         #T1 = np.zeros((self.n * self.n, 3), dtype=np.float32)
         T1 = coo_matrix((R, (U-1,I-1)))
-        T1 = T1.tocsr()
-        T = np.zeros((self.n, self.n), dtype=np.float32)
-        T[G_raw[:,0] - 1, G_raw[:, 1] -1] = 1
+        self.T1 = T1.tocsr()
+        self.T = np.zeros((self.n, self.n), dtype=np.float32)
+        self.T[G_raw[:,0] - 1, G_raw[:, 1] -1] = 1
         # list of all indices
         #ind =list(np.ndindex(T.shape))
         #ind = 0
@@ -59,11 +57,11 @@ class data_handler():
         #        if T[i,j] == 1:
         #            T1[ind, 2] = 1
         #        ind += 1
-        pdb.set_trace()
+        #pdb.set_trace()
         test_value = self.n * test
 
-data = data_handler("../../trust-aware-recom/data/rating_with_timestamp.mat", "../../trust-aware-recom/data/trust.mat", "../../trust-aware-recom/data/rating_with_timestamp.mat")
-data.load_matrices()
+#data = data_handler("rating_with_timestamp.mat", "trust.mat", "rating_with_timestamp.mat")
+#data.load_matrices()
 
 
 
