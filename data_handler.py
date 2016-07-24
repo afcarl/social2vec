@@ -35,7 +35,14 @@ class data_handler():
         # user and item and rating vectors from P matrix
         U = P_initial[:, 0]
         I = P_initial[:, 1]
+        U = U-1
+        I = I-1
         R = P_initial[:, 3]
+        R = R/float(5)
+        self.T1 = np.vstack((U, I, R)).T
+        #pdb.set_trace()
+        np.random.shuffle(self.T1)
+        #pdb.set_trace()
         # Normalize ratings to (0-1) range (max-min normalization)
         #R = (1/float(4)) * (R - 5) + 1
         #data_UI = np.zeros((len(U), 3), dtype=np.float32)
@@ -43,25 +50,26 @@ class data_handler():
         #data_UI[:, 1] = (I - 1)
         #data_UI[:, 2] = R
         #T1 = np.zeros((self.n * self.n, 3), dtype=np.float32)
-        T1 = coo_matrix((R, (U-1,I-1)))
-        self.T1 = T1.tocsr()
-        self.T = np.zeros((self.n, self.n), dtype=np.float32)
-        self.T[G_raw[:,0] - 1, G_raw[:, 1] -1] = 1
+        #T1 = coo_matrix((R, (U-1,I-1)))
+        #self.T1 = T1.tocsr()
+        #pdb.set_trace()
+        #self.T = np.zeros((self.n, self.n), dtype=np.float16)
+        #self.T[G_raw[:,0] - 1, G_raw[:, 1] -1] = 1
+        #pdb.set_trace()
+        f = open('trust.txt', 'w')
+
+        #for row in xrange(self.n):
+        #    for col in xrange(self.n):
+        #        f.write(str(row) + "\t" + str(col) + "\t" + str(self.T[row,col]) + '\n')
+
+
         # list of all indices
-        #ind =list(np.ndindex(T.shape))
-        #ind = 0
-        #for i in xrange(self.n):
-        #    for j in xrange(self.n):
-        #        T1[ind, 0] = i
-        #        T1[ind, 1] = j
-        #        if T[i,j] == 1:
-        #            T1[ind, 2] = 1
-        #        ind += 1
+        #ind =list(np.ndindex(self.T.shape))
         #pdb.set_trace()
         test_value = self.n * test
 
-#data = data_handler("rating_with_timestamp.mat", "trust.mat", "rating_with_timestamp.mat")
-#data.load_matrices()
+data = data_handler("rating_with_timestamp.mat", "trust.mat", "rating_with_timestamp.mat")
+data.load_matrices()
 
 
 
