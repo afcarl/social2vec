@@ -28,8 +28,9 @@ class data_handler():
         G_raw = loadmat(f2) #trust-trust matrices
         P_initial = P_initial['rating_with_timestamp']
         G_raw = G_raw['trust']
+        G_raw = G_raw - 1
         # Number of users
-        self.n = max(P_initial[:,0])
+        self.n = G_raw.max() + 1
         # number of items
         self.i = max(P_initial[:,1])
         # user and item and rating vectors from P matrix
@@ -40,8 +41,9 @@ class data_handler():
         R = P_initial[:, 3]
         R = R/float(5)
         self.T1 = np.vstack((U, I, R)).T
+        self.UI = coo_matrix((R, (U, I)))
         #pdb.set_trace()
-        np.random.shuffle(self.T1)
+        #np.random.shuffle(self.T1)
         #pdb.set_trace()
         # Normalize ratings to (0-1) range (max-min normalization)
         #R = (1/float(4)) * (R - 5) + 1
@@ -50,11 +52,11 @@ class data_handler():
         #data_UI[:, 1] = (I - 1)
         #data_UI[:, 2] = R
         #T1 = np.zeros((self.n * self.n, 3), dtype=np.float32)
-        #T1 = coo_matrix((R, (U-1,I-1)))
+        #T1 = coo_matrix((R, (U,I)))
         #self.T1 = T1.tocsr()
         #pdb.set_trace()
-        #self.T = np.zeros((self.n, self.n), dtype=np.float16)
-        #self.T[G_raw[:,0] - 1, G_raw[:, 1] -1] = 1
+        self.T = np.zeros((self.n, self.n), dtype=np.float16)
+        self.T[G_raw[:,0] , G_raw[:, 1]] = 1
         #pdb.set_trace()
         f = open('trust.txt', 'w')
 

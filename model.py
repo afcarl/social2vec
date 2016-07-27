@@ -7,10 +7,10 @@ import pdb
 
 class user2vec(object):
     def __init__(self, n_user, d, h, n_item):
-        self.n_user = n_user
+        self.n_user = n_user 
         self.d = d
         self.h = h
-        self.n_item = n_item
+        self.n_item = n_item 
         # Shared parameter (user embedding vector)
         self.Wu = theano.shared(np.random.uniform(low = - np.sqrt(6.0/float(n_user + d)),\
                                    high =  np.sqrt(6.0/float(n_user + d)),\
@@ -70,7 +70,7 @@ class user2vec(object):
         self.params2 = [self.Wm2, self.Wp2, self.b12, self.U2]
         self.Params2 = [self.Wm2, self.Wp2, self.B12, self.U2]
 
-    def model_batch_ui(self, lr=0.0001, reg_coef=0.001):
+    def model_batch_ui(self, lr=0.01, reg_coef=0.1):
         # U-I model
         ui = T.imatrix()
         yi = T.vector()
@@ -101,7 +101,7 @@ class user2vec(object):
         self.ui_batch = theano.function([ui, yi], cost1, updates=updates2, allow_input_downcast=True)
 
 
-    def model_batch_uu(self, lr=0.01):
+    def model_batch_uu(self, lr=0.1):
         # U-U model
         # theano matrix storing node embeddings
         uu = T.imatrix()
@@ -118,7 +118,7 @@ class user2vec(object):
         #params.extend(self.params)
         # Likelihood
         l = T.nnet.softmax(T.dot(self.U1, hL) + self.B21)
-        #cost = T.sum(T.nnet.binary_crossentropy(l, yu))
+        #cost = T.mean(T.nnet.binary_crossentropy(l, yu))
         cost = -T.mean(T.log(l[:, yu]))
         #cost = - T.sum(T.log(l + eps))
         #self.debug1 = theano.function([X,y], l)
@@ -131,9 +131,7 @@ class user2vec(object):
         updates11 = [(self.Wu, self.W1)]
         updates31 = [(param, param - lr * grad) for (param, grad) in zip(self.Params1, grads)]
         updates1 = updates11  + updates31
-        self.uu_batch = theano.function([uu,yu], cost, updates=updates1, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
-
-
+        self.uu_batch = theano.function([uu,yu], cost, updates=updates1)#, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
 
     def model(self, lr=0.01):
         # Tuple for user-user-item

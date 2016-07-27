@@ -16,21 +16,25 @@ u2v.model_batch_ui()
 
 # Training for batch mode
 def training_batch(batch_size):
+    
+    
+
+    print "UU training completed"
+    # U-I training
     m = len(data.T1)
     #pdb.set_trace()
     print m
     for i in xrange(0, m, batch_size):
         batch = data.T1[i:(i + batch_size), :]
+        #pdb.set_trace()
         U = batch[:, :2]
         Y = batch[:, 2]
         #U,v = u2v.debug(U)
         #pdb.set_trace()
         cost = u2v.ui_batch(U, Y)
         print cost
-        print "\n"
 
-
-    # U-I part
+    # U-U part
     ind = 0
     f = open('Trust.txt','r')
     batch = []
@@ -40,11 +44,24 @@ def training_batch(batch_size):
             data1 = map(lambda x:float(x), data1.split())
             batch.append(data1)
             if (ind + 1) % batch_size == 0:
-               batch = np.array(batch)
-               cost = u2v.uu_batch(batch[:, 0:2], batch[:, 2])
-               print cost
-               batch = []
+               batch = np.array(batch).astype(np.int32)
+               #pdb.set_trace()
+               try:
+                   cost = u2v.uu_batch(batch[:, 0:2], batch[:, 2])
+                   print cost
+                   print "\n"
+                   #if max(batch[:, 0]) >= n or max(batch[:, 1]) >= n:
+                   #    print " in buggy region"
+                   #    pdb.set_trace()
+                   #assert max(batch[:, 0]) > n and max(batch[:, 1]) > n
+                   batch = []
+               except Exception as e:
+                   print str(e)
+                   print "in exception, check batch"
+                   #pdb.set_trace()
             ind += 1
+
+
 
 # Training for single example mode
 def training():
@@ -79,4 +96,4 @@ if __name__ == "__main__":
     #training()
     training_batch(32)
     print "Training complete,"
-    pdb.set_trace()
+    #pdb.set_trace()
