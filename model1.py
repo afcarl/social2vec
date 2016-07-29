@@ -1,7 +1,8 @@
 from theano import tensor as T
 import theano
 import numpy as np
-#from preprocess import data
+from theano_utils.initialization import random
+from lasagne.updates import sgd, apply_momentum
 from theano.compile.nanguardmode import NanGuardMode
 import pdb
 
@@ -12,13 +13,9 @@ class user2vec(object):
         self.h = h
         self.n_item = n_item 
         # Shared parameter (user embedding vector)
-        self.Wu = theano.shared(np.random.uniform(low = - np.sqrt(6.0/float(n_user + d)),\
-                                   high =  np.sqrt(6.0/float(n_user + d)),\
-                                   size=(n_user,d)).astype(theano.config.floatX))
+        self.Wu = random(n_user, d)
         # Item embedding matrix
-        self.Wi = theano.shared(np.random.uniform(low = - np.sqrt(6.0/float(n_item + d)),\
-                                   high =  np.sqrt(6.0/float(n_item + d)),\
-                                   size=(n_item ,d)).astype(theano.config.floatX))
+        self.Wi = random(n_item, d)
 
         self.W1 = self.Wu
         self.W2 = self.Wi
@@ -70,7 +67,7 @@ class user2vec(object):
         self.params2 = [self.Wm2, self.Wp2, self.b12, self.U2]
         self.Params2 = [self.Wm2, self.Wp2, self.B12, self.U2]
 
-    def model_batch_ui(self, lr=0.01, reg_coef=0.1):
+    def model_batch_ui(self, lr=0.001, reg_coef=0.1):
         # U-I model
         ui = T.imatrix()
         yi = T.vector()
@@ -85,29 +82,30 @@ class user2vec(object):
         l1 = T.dot(self.U2, hL1)
 
         self.debug1 = theano.function([ui], l1, allow_input_downcast=True)
-        cost1 = T.sum((l1 - yi) ** 2) + reg_coef * ( T.sum(self.Wm2 ** 2) + T.sum(self.Wp2 ** 2) \
+        cost1 = T.mean((l1 - yi) ** 2) + reg_coef * ( T.sum(self.Wm2 ** 2) + T.sum(self.Wp2 ** 2) \
                 + T.sum(self.U2 ** 2))
         grad2 = T.grad(cost1, [U1, I])
         grads1 = T.grad(cost1, self.Params2)
         #print grads1
 
         # NOTE : THIS UPDATE WOULD REWRITE UPDATE FROM THE OTHER MODEL BECAUSE IT WILL UPDATE WU WITH CURRENT MODEL'S UPDATE
-        self.W3 = T.set_subtensor(self.W3[ui[:, 0], :], self.W3[ui[:, 0], :] - lr * grad2[0])
+        #self.W3 = T.set_subtensor(self.W3[ui[:, 0], :], self.W3[ui[:, 0], :] - lr * grad2[0])
         self.W2 = T.set_subtensor(self.W2[ui[:, 1], :], self.W2[ui[:, 1], :] - lr * grad2[1])
+        self.Wu = T.set_subtensor(self.Wu[ui[:, 0], :], self.Wu[ui[:, 0], :] - lr * grad2[0])
 
-        updates21 = [(self.Wu, self.W3)]
+        #updates21 = [(self.Wu, self.W1)]
         updates22 = [(self.Wi, self.W2)]
-        #updates23 = [(self.W1, self.W3)]
         updates24 = [(param, param - lr * grad) for (param, grad) in zip(self.Params2, grads1)]
         #pdb.set_trace()
-        updates2 = updates21 + updates22 + updates24# + updates24
-        param_norm = T.sum(self.Wu ** 2)
-        self.debug1 = theano.function([], param_norm, allow_input_downcast=True)
+        updates2 = updates22 + updates24
+
+        #param_norm = T.sum(self.Wu ** 2)
+        #self.debug1 = theano.function([], param_norm, allow_input_downcast=True)
         
         self.ui_batch = theano.function([ui, yi], cost1, updates=updates2, allow_input_downcast=True)
 
 
-    def model_batch_uu(self, lr=10.0001):
+    def model_batch_uu(self, lr=0.1):
         # U-U model
         # theano matrix storing node embeddings
         uu = T.imatrix()
@@ -134,14 +132,15 @@ class user2vec(object):
         self.debug_grad = theano.function([uu, yu], T.sum(gradV ** 2))
 
         #grad1[0].eval(np.random.randint(1000, size=(32,2)), np.random.randint(1, size=(32,)))
-        grads = T.grad(cost, self.Params1)
-        #updates1 = [(self.W1, T.inc_subtensor(self.W[X[:, 0]], grads[0]))]
-        #updates2 = [(self.W, T.inc_subtensor(self.W1[X[:, 1]], grads[1]))]
+        #grads = T.grad(cost, self.Params1)
         self.W1 = T.inc_subtensor(self.W1[uu[:,0], :], - lr * grad1[0])
         self.W1 = T.set_subtensor(self.W1[uu[:,1], :], self.W1[uu[:,1], :] - lr * grad1[1])
+        self.W3 = T.set_subtensor(self.W3[:], self.W1)
         updates11 = [(self.Wu, self.W1)]
+        #updates_sgd = sgd(cost, self.Params1, learning_rate = 0.01)
         updates31 = [(param, param - lr * grad) for (param, grad) in zip(self.Params1, grads)]
         updates1 = updates11  + updates31
+        #updates1 = apply_momentum(updates_sgd + updates11, self.Params1, momemtum=0.9)
         param_norm = T.sum(self.Wu ** 2)
         self.debug = theano.function([], param_norm, allow_input_downcast=True)
         self.uu_batch = theano.function([uu,yu], cost, updates=updates1, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
@@ -281,6 +280,14 @@ class user2vec(object):
         self.sgd_uu = theano.function([uu, yu], J1, updates=updates1, mode='DebugMode', allow_input_downcast=True)
         self.sgd_ui = theano.function([ui, yi], J2, updates=updates2, mode='DebugMode', allow_input_downcast=True)
         #self.gd = theano.function([uu,yu], cost, mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
+
+
+    def get_params(self):
+       Wu = self.Wu.get_value()
+       Wi = self.Wi.get_value()
+       W = [param.get_value() for param in self.Par
+       W1 = [param.get_value() for param in self.Param2]
+
 
 
 

@@ -98,9 +98,10 @@ class data_handler():
                 #print "pre-processing done, now randomly sample data"
                 #pdb.set_trace()
                 neg_ind = np.random.randint(len(zeros),size=(m))
+                neg_samples = zeros[neg_ind]
                 #pdb.set_trace()
                 # writing negative samples to file
-                for neg in neg_ind:
+                for neg in neg_samples:
                     f.write(str(i) + "\t" + str(neg) + "\t" + str(0) + '\n')
             except Exception as e:
                 print str(e)

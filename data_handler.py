@@ -41,6 +41,7 @@ class data_handler():
         R = P_initial[:, 3]
         R = R/float(5)
         self.T1 = np.vstack((U, I, R)).T
+        np.random.shuffle(self.T1)
         self.UI = coo_matrix((R, (U, I)))
         #pdb.set_trace()
         #np.random.shuffle(self.T1)

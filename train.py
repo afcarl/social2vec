@@ -1,5 +1,5 @@
 from data_handler import data_handler
-from model import user2vec
+from model1 import user2vec
 import pdb
 import numpy as np
 #n = data.shape[0]
@@ -15,25 +15,7 @@ u2v.model_batch_uu()
 u2v.model_batch_ui()
 
 # Training for batch mode
-def training_batch(batch_size):
-    
-    
-
-    print "UU training completed"
-    # U-I training
-    m = len(data.T1)
-    #pdb.set_trace()
-    print m
-    for i in xrange(0, m, batch_size):
-        batch = data.T1[i:(i + batch_size), :]
-        #pdb.set_trace()
-        U = batch[:, :2]
-        Y = batch[:, 2]
-        #U,v = u2v.debug(U)
-        #pdb.set_trace()
-        cost = u2v.ui_batch(U, Y)
-        print cost
-
+def training_batch(batch_size): 
     # U-U part
     ind = 0
     f = open('Trust.txt','r')
@@ -48,7 +30,8 @@ def training_batch(batch_size):
                #pdb.set_trace()
                try:
                    cost = u2v.uu_batch(batch[:, 0:2], batch[:, 2])
-                   print cost
+                   cost1 = u2v.debug()
+                   print cost, cost1
                    print "\n"
                    #if max(batch[:, 0]) >= n or max(batch[:, 1]) >= n:
                    #    print " in buggy region"
@@ -62,6 +45,23 @@ def training_batch(batch_size):
             ind += 1
 
 
+
+    print "UU training completed"
+    # U-I training
+    m = len(data.T1)
+    #pdb.set_trace()
+    print m
+    for i in xrange(0, m, batch_size):
+        batch = data.T1[i:(i + batch_size), :]
+        #pdb.set_trace()
+        U = batch[:, :2]
+        Y = batch[:, 2]
+        cost = u2v.ui_batch(U, Y)
+        #cost = u2v.debug1(U)
+        print cost
+        #print u2v.debug1()
+
+    
 
 # Training for single example mode
 def training():
