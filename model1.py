@@ -81,7 +81,7 @@ class user2vec(object):
         hL1 = T.tanh(T.dot(self.Wm2, hLm1.T) + T.dot(self.Wp2, hLp1.T) + self.B12)
         l1 = T.dot(self.U2, hL1)
 
-        self.debug1 = theano.function([ui], l1, allow_input_downcast=True)
+        #self.debug1 = theano.function([ui], l1, allow_input_downcast=True)
         cost1 = T.mean((l1 - yi) ** 2) + reg_coef * ( T.sum(self.Wm2 ** 2) + T.sum(self.Wp2 ** 2) \
                 + T.sum(self.U2 ** 2))
         grad2 = T.grad(cost1, [U1, I])
@@ -89,15 +89,15 @@ class user2vec(object):
         #print grads1
 
         # NOTE : THIS UPDATE WOULD REWRITE UPDATE FROM THE OTHER MODEL BECAUSE IT WILL UPDATE WU WITH CURRENT MODEL'S UPDATE
-        #self.W3 = T.set_subtensor(self.W3[ui[:, 0], :], self.W3[ui[:, 0], :] - lr * grad2[0])
+        self.W3 = T.set_subtensor(self.W3[ui[:, 0], :], self.W3[ui[:, 0], :] - lr * grad2[0])
         self.W2 = T.set_subtensor(self.W2[ui[:, 1], :], self.W2[ui[:, 1], :] - lr * grad2[1])
-        self.Wu = T.set_subtensor(self.Wu[ui[:, 0], :], self.Wu[ui[:, 0], :] - lr * grad2[0])
+        #self.Wu = T.set_subtensor(self.Wu[ui[:, 0], :], self.Wu[ui[:, 0], :] - lr * grad2[0])
 
-        #updates21 = [(self.Wu, self.W1)]
+        updates21 = [(self.Wu, self.W3)]
         updates22 = [(self.Wi, self.W2)]
         updates24 = [(param, param - lr * grad) for (param, grad) in zip(self.Params2, grads1)]
         #pdb.set_trace()
-        updates2 = updates22 + updates24
+        updates2 = updates21 + updates22 + updates24
 
         #param_norm = T.sum(self.Wu ** 2)
         #self.debug1 = theano.function([], param_norm, allow_input_downcast=True)
@@ -120,10 +120,11 @@ class user2vec(object):
         # Likelihood
         l = T.nnet.softmax(T.dot(self.U1, hL) + self.B21)
 
-        #elf.debug = theano.function([uu], l)
+        self.debug = theano.function([uu], l)
         #cost = T.mean(T.nnet.binary_crossentropy(l, yu))
-
-        cost = -T.mean(T.log(l[yu, :]))
+        y = l[yu, T.arange(yu.shape[0])]
+        self.debug1 = theano.function([uu, yu], y)
+        cost = -T.mean(T.log(y))
         #self.debug1 = theano.function([X,y], l)
         grad1 = T.grad(cost, [U,V])
         gradU = grad1[0]
@@ -131,18 +132,17 @@ class user2vec(object):
         # Check norm of gradient, if it is moving or not
         self.debug_grad = theano.function([uu, yu], T.sum(gradV ** 2))
 
-        #grad1[0].eval(np.random.randint(1000, size=(32,2)), np.random.randint(1, size=(32,)))
-        #grads = T.grad(cost, self.Params1)
+        grads = T.grad(cost, self.Params1)
         self.W1 = T.inc_subtensor(self.W1[uu[:,0], :], - lr * grad1[0])
         self.W1 = T.set_subtensor(self.W1[uu[:,1], :], self.W1[uu[:,1], :] - lr * grad1[1])
-        self.W3 = T.set_subtensor(self.W3[:], self.W1)
+        #self.W3 = T.set_subtensor(self.W3[:], self.W1)
         updates11 = [(self.Wu, self.W1)]
         #updates_sgd = sgd(cost, self.Params1, learning_rate = 0.01)
         updates31 = [(param, param - lr * grad) for (param, grad) in zip(self.Params1, grads)]
         updates1 = updates11  + updates31
         #updates1 = apply_momentum(updates_sgd + updates11, self.Params1, momemtum=0.9)
-        param_norm = T.sum(self.Wu ** 2)
-        self.debug = theano.function([], param_norm, allow_input_downcast=True)
+        #param_norm = T.sum(self.Wu ** 2)
+        #self.debug = theano.function([], param_norm, allow_input_downcast=True)
         self.uu_batch = theano.function([uu,yu], cost, updates=updates1, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
 
     def model(self, lr=0.01):
@@ -283,13 +283,37 @@ class user2vec(object):
 
 
     def get_params(self):
+       # Save parameter values
+       print "Save parameters"
        Wu = self.Wu.get_value()
        Wi = self.Wi.get_value()
-       W = [param.get_value() for param in self.Par
-       W1 = [param.get_value() for param in self.Param2]
-
-
-
+       Wm1 = self.Wm1.get_value()
+       Wp1 = self.Wp1.get_value()
+       b11 = self.b11.get_value()
+       B11 = self.B11.get_value()
+       b21 = self.b21.get_value()
+       B21 = self.B21.get_value()
+       U1 = self.U1.get_value()
+       Wm2 = self.Wm2.get_value()
+       Wp2 = self.Wp2.get_value()
+       b12 = self.b12.get_value()
+       B12 = self.B12.get_value()
+       U2 = self.U2.get_value()
+       np.save('./model/Wu', Wu)
+       np.save('./model/Wi', Wu)
+       np.save('./model/Wm1', Wm1)
+       np.save('./model/Wp1', Wp1)
+       np.save('./model/b11', b11)
+       np.save('./model/B11', B11)
+       np.save('./model/b21', b21)
+       np.save('./model/B21', B21)
+       np.save('./model/U1', U1)
+       np.save('./model/Wm2', Wm2)
+       np.save('./model/Wp2', Wp2)
+       np.save('./model/b12', b12)
+       np.save('./model/B12', B12)
+       np.save('./model/U2', U2)
+       print "Learned paramters saved to disk"
 
 #if __name__ == "__main__":
 #       u2v = user2vec(22166, 100, 100, 200)

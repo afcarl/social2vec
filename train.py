@@ -30,9 +30,11 @@ def training_batch(batch_size):
                #pdb.set_trace()
                try:
                    cost = u2v.uu_batch(batch[:, 0:2], batch[:, 2])
-                   cost1 = u2v.debug()
-                   print cost, cost1
+                   #cost1 = u2v.debug(batch[:, :2])
+                   #cost2 = u2v.debug1(batch[:, :2], batch[:, 2])
+                   print cost
                    print "\n"
+                   #pdb.set_trace()
                    #if max(batch[:, 0]) >= n or max(batch[:, 1]) >= n:
                    #    print " in buggy region"
                    #    pdb.set_trace()
@@ -60,7 +62,9 @@ def training_batch(batch_size):
         #cost = u2v.debug1(U)
         print cost
         #print u2v.debug1()
-
+    
+    # Save the model to disk
+    u2v.get_params()
     
 
 # Training for single example mode
