@@ -7,6 +7,7 @@ import numpy as np
 import theano
 
 
+np.random.seed(42)
 def relu(n_inp, n_out):
     raise NotImplmentedError
 

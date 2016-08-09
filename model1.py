@@ -6,6 +6,8 @@ from lasagne.updates import sgd, apply_momentum
 from theano.compile.nanguardmode import NanGuardMode
 import pdb
 
+
+np.random.seed(42)
 class user2vec(object):
     def __init__(self, n_user, d, h, n_item):
         self.n_user = n_user 
@@ -110,7 +112,7 @@ class user2vec(object):
         self.ui_batch = theano.function([ui, yi], cost1, updates=updates2, allow_input_downcast=True)
 
 
-    def model_batch_uu(self, lr=0.9, reg_coef=0.000000001):
+    def model_batch_uu(self, lr=0.2, reg_coef=0.0001):
         # U-U model
         # theano matrix storing node embeddings
         uu = T.imatrix()

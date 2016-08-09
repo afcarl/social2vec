@@ -3,6 +3,9 @@ import numpy as np
 # Import logistic regrs
 import pdb
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
 
 
 # Load saved params for prediction
@@ -47,10 +50,19 @@ x = np.dot(U1, hL) + B21
 l = softmax(x)
 
 yp = np.argmax(l, axis=0)
+print "accuracy"
 print accuracy_score(Y, yp)
 
-pdb.set_trace()
-# Predict accuracy
+print "precision"
+print precision_score(Y, yp)
+
+print "recall"
+print recall_score(Y, yp)
+
+print "f1 score"
+print f1_score(Y, yp)
+
+#pdb.set_trace()
 
 
 

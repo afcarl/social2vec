@@ -9,7 +9,7 @@ n = data.n
 i = data.i
 h = 100
 d = 50
-n_epochs = 50
+n_epochs = 20
 u2v = user2vec(n, h,d,i)
 #u2v.model1()
 u2v.model_batch_uu()
@@ -53,20 +53,20 @@ def training_batch(batch_size):
 
 
 
-        print "UU training completed"
-        # U-I training
-        m = len(data.T1)
-        #pdb.set_trace()
-        print m
-        for i in xrange(0, m, batch_size):
-            batch = data.T1[i:(i + batch_size), :]
-            #pdb.set_trace()
-            U = batch[:, :2]
-            Y = batch[:, 2]
-            cost = u2v.ui_batch(U, Y)
-            #cost = u2v.debug1(U)
-            print cost
-            #print u2v.debug1()
+        #print "UU training completed"
+        ## U-I training
+        #m = len(data.T1)
+        ##pdb.set_trace()
+        #print m
+        #for i in xrange(0, m, batch_size):
+        #    batch = data.T1[i:(i + batch_size), :]
+        #    #pdb.set_trace()
+        #    U = batch[:, :2]
+        #    Y = batch[:, 2]
+        #    cost = u2v.ui_batch(U, Y)
+        #    #cost = u2v.debug1(U)
+        #    print cost
+        #    #print u2v.debug1()
         
         # Save the model to disk
     u2v.get_params()
@@ -103,6 +103,6 @@ def training():
 
 if __name__ == "__main__":
     #training()
-    training_batch(256)
+    training_batch(128)
     print "Training complete,"
     #pdb.set_trace()
