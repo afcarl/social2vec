@@ -9,7 +9,7 @@ n = data.n
 i = data.i
 h = 100
 d = 50
-n_epochs = 50
+n_epochs = 5
 u2v = user2vec(n, h,d,i)
 #u2v.model1()
 u2v.model_batch_uu()
@@ -21,6 +21,7 @@ def training_batch(batch_size):
     ind = 0
     f = open('Trust.txt','r')
     batch = []
+    print "u-U training started"
 
     for epoch in xrange(n_epochs):
         batch = []

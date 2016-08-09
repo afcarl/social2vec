@@ -1,13 +1,12 @@
 from theano import tensor as T
 import theano
 import numpy as np
-from theano_utils.initialization import random
+from theano_utils.initialization import random, sigmoid, tanh
 from lasagne.updates import sgd, apply_momentum
 from theano.compile.nanguardmode import NanGuardMode
 import pdb
 
 
-np.random.seed(42)
 class user2vec(object):
     def __init__(self, n_user, d, h, n_item):
         self.n_user = n_user 
@@ -15,9 +14,9 @@ class user2vec(object):
         self.h = h
         self.n_item = n_item 
         # Shared parameter (user embedding vector)
-        self.Wu = random(n_user, d)
+        self.Wu = random(n_user, d, True)
         # Item embedding matrix
-        self.Wi = random(n_item, d)
+        self.Wi = random(n_item, d, True)
 
         self.W1 = theano.shared(self.Wu.get_value())
         self.W2 = theano.shared(self.Wi.get_value())
@@ -26,11 +25,11 @@ class user2vec(object):
         #self.Wm1 = theano.shared(np.random.uniform(low=-np.sqrt(6.0/float(h + d)),
         #                            high = np.sqrt(6.0/float(h+d)),
         #                            size=(h,d)).astype(theano.config.floatX))
-        self.Wm1 = random(h,d)
+        self.Wm1 = random(h,d, True)
         #self.Wp1 = theano.shared(np.random.uniform(low=-np.sqrt(6.0/float(h + d)),
         #                            high = np.sqrt(6.0/float(h+d)),
         #                            size=(h,d)).astype(theano.config.floatX))
-        self.Wp1 = random(h,d)
+        self.Wp1 = random(h,d, True)
         # Param for single example model
         self.b11 = theano.shared(np.zeros((h), dtype=theano.config.floatX))
         # Param for batch model
@@ -41,17 +40,13 @@ class user2vec(object):
         # Param for batch model
         self.B21 = theano.shared(np.zeros((2,1), dtype=theano.config.floatX), broadcastable=(False, True))
 
-        self.U1 = theano.shared(np.random.uniform(low= -4* np.sqrt(6.0/float(2 + h)),\
-                                              high = 4*np.sqrt(6.0/float(2 + h)),
-                                              size=(2,h)).astype(theano.config.floatX))
+
+        self.U1 = sigmoid(2, h, True)
 
         # Parameters for user-item model
-        self.Wm2 = theano.shared(np.random.uniform(low=-np.sqrt(6.0/float(h + d)),
-                                    high = np.sqrt(6.0/float(h+d)),
-                                    size=(h,d)).astype(theano.config.floatX))
-        self.Wp2 = theano.shared(np.random.uniform(low= - np.sqrt(6.0/float(h + d)),
-                                    high = np.sqrt(6.0/float(h+d)),
-                                    size=(h,d)).astype(theano.config.floatX))
+        self.Wm2 = tanh(h, d, True)
+
+        self.Wp2 = tanh(h, d, True)
         self.b12 = theano.shared(np.zeros((h), dtype=theano.config.floatX))
         # Mini batch model param
         self.B12 = theano.shared(np.zeros((h,1), dtype=theano.config.floatX), broadcastable=(False, True))
@@ -64,7 +59,7 @@ class user2vec(object):
         #self.U2 = theano.shared(np.random.uniform(low= - np.sqrt(6.0/float(2 + h)),\
         #                                      high = np.sqrt(6.0/float(2 + h)),
         #                                      size=(1,h)).astype(theano.config.floatX))
-        self.U2 = random(1, h)
+        self.U2 = random(1, h, True)
         self.params1 = [self.Wm1, self.Wp1, self.b11, self.b21, self.U1]
         self.Params1 = [self.Wm1, self.Wp1, self.B11, self.B21, self.U1]
 
@@ -112,7 +107,7 @@ class user2vec(object):
         self.ui_batch = theano.function([ui, yi], cost1, updates=updates2, allow_input_downcast=True)
 
 
-    def model_batch_uu(self, lr=0.2, reg_coef=0.0001):
+    def model_batch_uu(self, lr=0.5, reg_coef=0.001):
         # U-U model
         # theano matrix storing node embeddings
         uu = T.imatrix()

@@ -9,7 +9,7 @@ n = data.n
 i = data.i
 h = 100
 d = 50
-n_epochs = 20
+n_epochs = 5
 u2v = user2vec(n, h,d,i)
 #u2v.model1()
 u2v.model_batch_uu()
@@ -53,7 +53,7 @@ def training_batch(batch_size):
 
 
 
-        #print "UU training completed"
+        print "UU training completed"
         ## U-I training
         #m = len(data.T1)
         ##pdb.set_trace()
