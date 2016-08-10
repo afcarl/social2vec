@@ -66,7 +66,7 @@ class user2vec(object):
         self.params2 = [self.Wm2, self.Wp2, self.b12, self.U2]
         self.Params2 = [self.Wm2, self.Wp2, self.B12, self.U2]
 
-    def model_batch_ui(self, lr=0.001, reg_coef=0.1):
+    def model_batch_ui(self, lr=0.01, reg_coef=0.1):
         # U-I model
         ui = T.imatrix()
         yi = T.vector()

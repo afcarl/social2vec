@@ -103,6 +103,6 @@ def training():
 
 if __name__ == "__main__":
     #training()
-    training_batch(128)
+    training_batch(256)
     print "Training complete,"
     #pdb.set_trace()
