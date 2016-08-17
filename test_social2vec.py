@@ -53,14 +53,14 @@ yp = np.argmax(l, axis=0)
 print "accuracy"
 print accuracy_score(Y, yp)
 
-print "precision"
-print precision_score(Y, yp)
+#print "precision"
+#print precision_score(Y, yp)
 
-print "recall"
-print recall_score(Y, yp)
+#print "recall"
+#print recall_score(Y, yp)
 
-print "f1 score"
-print f1_score(Y, yp)
+#print "f1 score"
+#print f1_score(Y, yp)
 
 #pdb.set_trace()
 

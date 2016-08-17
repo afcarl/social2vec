@@ -9,10 +9,10 @@ import pdb
 
 class user2vec(object):
     def __init__(self, n_user, d, h, n_item):
-        self.n_user = n_user 
+        self.n_user = n_user
         self.d = d
         self.h = h
-        self.n_item = n_item 
+        self.n_item = n_item
         # Shared parameter (user embedding vector)
         self.Wu = random(n_user, d, True)
         # Item embedding matrix
@@ -39,7 +39,8 @@ class user2vec(object):
         self.b21 = theano.shared(np.zeros((2), dtype=theano.config.floatX))
         # Param for batch model
         self.B21 = theano.shared(np.zeros((2,1), dtype=theano.config.floatX), broadcastable=(False, True))
-
+        # Bias for binary U-I model
+        self.Bui = theano.shared(np.zeros((2,1), dtype=theano.config.floatX), broadcastable=(False, True))
 
         self.U1 = sigmoid(2, h, True)
 
@@ -59,17 +60,20 @@ class user2vec(object):
         #self.U2 = theano.shared(np.random.uniform(low= - np.sqrt(6.0/float(2 + h)),\
         #                                      high = np.sqrt(6.0/float(2 + h)),
         #                                      size=(1,h)).astype(theano.config.floatX))
-        self.U2 = random(1, h, True)
+        # UI model changed from real valued to binary so changing the initialization
+        self.U2 = sigmoid(2, h, True)
         self.params1 = [self.Wm1, self.Wp1, self.b11, self.b21, self.U1]
         self.Params1 = [self.Wm1, self.Wp1, self.B11, self.B21, self.U1]
 
         self.params2 = [self.Wm2, self.Wp2, self.b12, self.U2]
         self.Params2 = [self.Wm2, self.Wp2, self.B12, self.U2]
 
-    def model_batch_ui(self, lr=0.01, reg_coef=0.1):
+    # Changing UI model from MSE to binary loss model
+    def model_batch_ui(self, lr=0.4, reg_coef=0.001):
         # U-I model
         ui = T.imatrix()
-        yi = T.vector()
+        # Target changed from continuous variable to binary variable
+        yi = T.ivector()
 
         U1 = self.Wu[ui[:, 0], :]
         I = self.Wi[ui[:, 1], :]
@@ -78,10 +82,13 @@ class user2vec(object):
         hLp1 = abs(U1 - I)
 
         hL1 = T.tanh(T.dot(self.Wm2, hLm1.T) + T.dot(self.Wp2, hLp1.T) + self.B12)
-        l1 = T.dot(self.U2, hL1)
+        # l1 changed from real value to likelihood of classes
+        l1 = T.nnet.softmax(T.dot(self.U1, hL1) + self.Bui)
 
         #self.debug1 = theano.function([ui], l1, allow_input_downcast=True)
-        cost1 = T.mean((l1 - yi) ** 2) + reg_coef * ( T.sum(self.Wm2 ** 2) + T.sum(self.Wp2 ** 2) \
+        y1 = l1[yi, T.arange(yi.shape[0])]
+        # Changing cost from MSE to CE
+        cost1 = -T.mean(T.log(y1)) + reg_coef * ( T.sum(self.Wm2 ** 2) + T.sum(self.Wp2 ** 2) \
                 + T.sum(self.U2 ** 2))
         grad2 = T.grad(cost1, [U1, I])
         grads1 = T.grad(cost1, self.Params2)
@@ -103,16 +110,17 @@ class user2vec(object):
 
         #param_norm = T.sum(self.Wu ** 2)
         #self.debug1 = theano.function([], param_norm, allow_input_downcast=True)
-        
+
         self.ui_batch = theano.function([ui, yi], cost1, updates=updates2, allow_input_downcast=True)
 
 
-    def model_batch_uu(self, lr=0.5, reg_coef=0.001):
+    def model_batch_uu(self, reg_coef=0.001):
         # U-U model
         # theano matrix storing node embeddings
         uu = T.imatrix()
         # Target labels for input
         yu = T.ivector()
+        lr = T.scalar()
         # Extract the word vectors corresponding to inputs
         U = self.Wu[uu[:, 0], :]
         V = self.Wu[uu[:, 1], :]
@@ -153,7 +161,7 @@ class user2vec(object):
         #updates1 = apply_momentum(updates_sgd + updates11, self.Params1, momemtum=0.9)
         #param_norm = T.sum(self.Wu ** 2)
         #self.debug = theano.function([], param_norm, allow_input_downcast=True)
-        self.uu_batch = theano.function([uu,yu], cost, updates=updates1, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
+        self.uu_batch = theano.function([uu, yu, lr], cost, updates=updates1, allow_input_downcast=True) #mode=NanGuardMode(nan_is_error=True, inf_is_error=True, big_is_error=True))
 
     def model(self, lr=0.01):
         # Tuple for user-user-item
@@ -296,8 +304,8 @@ class user2vec(object):
        # Save parameter values
        print "Save parameters"
        #Wu = self.Wu.get_value()
-       get_wu = theano.function([], self.Wu, updates=None)
-       Wu = get_wu()
+       #get_wu = theano.function([], self.Wu, updates=None)
+       Wu = self.Wu.get_value()
        Wi = self.Wi.get_value()
        Wm1 = self.Wm1.get_value()
        Wp1 = self.Wp1.get_value()

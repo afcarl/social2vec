@@ -46,21 +46,19 @@ class data_handler():
         np.random.seed(42)
         np.random.shuffle(self.T1)
         self.UI = coo_matrix((R, (U, I)))
-
-        # Data generation part, shifted to data_handler_ui.py
         # Convert sparse to dense matrix for binary UI model
-        #self.ui = self.UI.todense()
-        ## Convert Ui to binary matrix
-        #self.ui[self.ui > 0.0] = 1.0
-        ## Write the UI matrix to file in the format "i j ui[i, j]"
-        #f_ui = open('UI.txt', 'w')
-        ## writing positive entries to file
-        #pos_ind = np.where(self.ui == 1)
-        #R = pos_ind[0]
-        #C = pos_ind[1]
-        #for r,c  in zip(R, C):
-        #        f_ui.write(str(r) + "\t" + str(c) + "\t" + str(1) + "\n")
-        #print("positive example written to file")
+        self.ui = self.UI.todense()
+        # Convert Ui to binary matrix
+        self.ui[self.ui > 0.0] = 1.0
+        # Write the UI matrix to file in the format "i j ui[i, j]"
+        f_ui = open('UI_pos.txt', 'w')
+        # writing positive entries to file
+        pos_ind = np.where(self.ui == 1)
+        R = pos_ind[0]
+        C = pos_ind[1]
+        for r,c  in zip(R, C):
+                f_ui.write(str(r) + "\t" + str(c) + "\t" + str(1) + "\n")
+        print("positive example written to file")
         ##pdb.set_trace()
         ## Generate training data for UI model from self.ui matrix throught negative sampling
         #U = self.ui.shape[0]
