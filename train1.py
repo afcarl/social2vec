@@ -10,7 +10,7 @@ data.load_matrices()
 n = data.n
 i = data.i
 h = 64
-d = 32
+d = 10
 n_epochs = 10
 u2v = user2vec(n, h,d,i)
 #u2v.model1()
@@ -26,7 +26,7 @@ def training_batch(batch_size):
     batch = []
 
     for epoch in xrange(n_epochs):
-        if epoch > 4:
+        if epoch > 6:
             lr0 = lr0/float(1.0 + 0.1 * epoch)
         batch = []
         print("Initiating epoch %d"%epoch)

@@ -320,7 +320,7 @@ class user2vec(object):
        B12 = self.B12.get_value()
        U2 = self.U2.get_value()
        np.save('./model/Wu', Wu)
-       np.save('./model/Wi', Wu)
+       np.save('./model/Wi', Wi)
        np.save('./model/Wm1', Wm1)
        np.save('./model/Wp1', Wp1)
        np.save('./model/b11', b11)
